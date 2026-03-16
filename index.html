@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INTTRA SI to Fumigation Excel Pro</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --line: #d8dde3;
+      --text: #1f2933;
+      --muted: #5f6c7b;
+      --accent: #1d4ed8;
+      --accent-soft: #e8f0ff;
+      --good: #157347;
+      --warn: #b45309;
+      --bad: #b42318;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin-bottom: 18px;
+      line-height: 1.45;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fafbfc;
+      font-weight: 700;
+    }
+
+    .card-body {
+      padding: 16px;
+    }
+
+    #dropzone {
+      border: 2px dashed #7a8a9b;
+      border-radius: 12px;
+      background: #fbfdff;
+      padding: 34px 20px;
+      text-align: center;
+      font-size: 17px;
+      cursor: pointer;
+      transition: 0.18s ease;
+      user-select: none;
+    }
+
+    #dropzone.dragover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    input[type="file"] { display: none; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+    }
+
+    .stat .label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+
+    .stat .value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    button {
+      border: 1px solid #b8c2cc;
+      background: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    button.good {
+      background: var(--good);
+      border-color: var(--good);
+      color: #fff;
+    }
+
+    button.warn {
+      background: #fff7ed;
+      border-color: #fdba74;
+      color: #9a3412;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: #fcfcfd;
+      border-radius: 10px;
+      min-height: 74px;
+      white-space: pre-wrap;
+      font-size: 13px;
+      color: #334155;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .field small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      border: 1px solid #c7d0d9;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: #fff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .field textarea {
+      min-height: 210px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .tokens {
+      margin-top: 4px;
+      padding: 10px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      font-size: 12px;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .toolbar button {
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px;
+      vertical-align: top;
+      font-size: 13px;
+      word-break: break-word;
+      white-space: pre-wrap;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .table-wrap {
+      max-height: 430px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #eef2ff;
+      color: #3730a3;
+      border: 1px solid #c7d2fe;
+      margin: 0 6px 6px 0;
+    }
+
+    .subject-preview {
+      border: 1px solid var(--line);
+      background: #fafcff;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #334155;
+      min-height: 70px;
+    }
+
+    .muted { color: var(--muted); }
+    .danger { color: var(--bad); }
+
+    @media (max-width: 1180px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 780px) {
+      .stats, .grid-2 { grid-template-columns: 1fr; }
+      body { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>INTTRA SI → Fumigation Excel Pro</h1>
+  <div class="sub">Batch process multiple INTTRA SI HTML files, generate one Excel per shipment, create one email draft per shipment, and download everything together in a ZIP.</div>
+
+  <div class="layout">
+    <div class="card">
+      <div class="card-header">Shipments</div>
+      <div class="card-body">
+        <div id="dropzone">Drop INTTRA SI HTML file(s) here or click to browse</div>
+        <input type="file" id="fileInput" accept=".html,.htm" multiple />
+
+        <div class="stats">
+          <div class="stat"><div class="label">Shipments</div><div class="value" id="shipmentCount">0</div></div>
+          <div class="stat"><div class="label">Containers</div><div class="value" id="containerCount">0</div></div>
+          <div class="stat"><div class="label">Selected</div><div class="value" id="selectedCount">0</div></div>
+          <div class="stat"><div class="label">Email drafts</div><div class="value" id="emailCount">0</div></div>
+        </div>
+
+        <div class="actions">
+          <button id="downloadSelectedBtn" class="primary" disabled>Download Selected Excel(s)</button>
+          <button id="emailSelectedBtn" disabled>Create Selected Email Draft(s)</button>
+          <button id="zipBtn" class="good" disabled>Download ZIP (Excel + Email)</button>
+          <button id="clearBtn" class="warn">Clear All</button>
+        </div>
+
+        <div id="status">No file loaded.</div>
+
+        <div style="margin-top:16px;" class="toolbar">
+          <button id="selectAllBtn" disabled>Select All</button>
+          <button id="selectNoneBtn" disabled>Select None</button>
+          <button id="removeSelectedBtn" disabled>Remove Selected</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="summaryTable">
+            <thead>
+              <tr>
+                <th style="width:42px;">✓</th>
+                <th style="width:120px;">Forwarders Ref</th>
+                <th style="width:150px;">Shipper</th>
+                <th style="width:120px;">Vessel</th>
+                <th style="width:90px;">Voyage</th>
+                <th style="width:180px;">Containers</th>
+                <th style="width:80px;">Qty</th>
+                <th>Subject Preview</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Email template</div>
+      <div class="card-body">
+        <div class="grid-2">
+          <div class="field">
+            <label for="toField">To</label>
+            <input id="toField" type="text" placeholder="recipient@example.com" />
+          </div>
+          <div class="field">
+            <label for="ccField">CC</label>
+            <input id="ccField" type="text" placeholder="cc@example.com" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="subjectPrefixField">Subject prefix</label>
+          <input id="subjectPrefixField" type="text" value="Fumigation application" />
+          <small>Final subject format: prefix - shipper - vessel voyage - container details - forwarders reference</small>
+        </div>
+
+        <div class="field">
+          <label for="bodyTemplateField">Body template</label>
+          <textarea id="bodyTemplateField">Good day,
+
+Please find attached the fumigation application for the shipment below:
+
+Shipper: {{shipper}}
+Vessel: {{vessel}}
+Voyage: {{voyage}}
+Forwarders reference: {{forwarderReference}}
+Containers:
+{{containerList}}
+
+Kind regards,
+{{senderName}}</textarea>
+          <div class="tokens">
+            Available placeholders:<br>
+            <span class="pill">{{shipper}}</span>
+            <span class="pill">{{vessel}}</span>
+            <span class="pill">{{voyage}}</span>
+            <span class="pill">{{forwarderReference}}</span>
+            <span class="pill">{{containers}}</span>
+            <span class="pill">{{containerList}}</span>
+            <span class="pill">{{containerCount}}</span>
+            <span class="pill">{{senderName}}</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="senderNameField">Sender name/sign-off</label>
+            <input id="senderNameField" type="text" placeholder="Your name" />
+          </div>
+          <div class="field">
+            <label for="attachmentModeField">ZIP content</label>
+            <select id="attachmentModeField">
+              <option value="both">Excel + email drafts</option>
+              <option value="excel">Excel only</option>
+              <option value="email">Email drafts only</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:0;">
+          <label>First selected shipment subject preview</label>
+          <div class="subject-preview" id="subjectPreview">No shipment selected yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let processedFiles = [];
+    let shipmentIdCounter = 1;
+
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    const statusEl = document.getElementById("status");
+    const tbody = document.querySelector("#summaryTable tbody");
+
+    const shipmentCountEl = document.getElementById("shipmentCount");
+    const containerCountEl = document.getElementById("containerCount");
+    const selectedCountEl = document.getElementById("selectedCount");
+    const emailCountEl = document.getElementById("emailCount");
+    const subjectPreviewEl = document.getElementById("subjectPreview");
+
+    const downloadSelectedBtn = document.getElementById("downloadSelectedBtn");
+    const emailSelectedBtn = document.getElementById("emailSelectedBtn");
+    const zipBtn = document.getElementById("zipBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const selectAllBtn = document.getElementById("selectAllBtn");
+    const selectNoneBtn = document.getElementById("selectNoneBtn");
+    const removeSelectedBtn = document.getElementById("removeSelectedBtn");
+
+    const toField = document.getElementById("toField");
+    const ccField = document.getElementById("ccField");
+    const subjectPrefixField = document.getElementById("subjectPrefixField");
+    const bodyTemplateField = document.getElementById("bodyTemplateField");
+    const senderNameField = document.getElementById("senderNameField");
+    const attachmentModeField = document.getElementById("attachmentModeField");
+
+    dropzone.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", async (e) => {
+      if (e.target.files?.length) await handleFiles(e.target.files);
+    });
+
+    ["dragenter", "dragover"].forEach(name => {
+      dropzone.addEventListener(name, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add("dragover");
+      });
+    });
+
+    ["dragleave", "dragend", "drop"].forEach(name => {
+      dropzone.addEventListener(name, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove("dragover");
+      });
+    });
+
+    dropzone.addEventListener("drop", async (e) => {
+      const files = e.dataTransfer.files;
+      if (files?.length) await handleFiles(files);
+    });
+
+    document.addEventListener("dragover", e => e.preventDefault());
+    document.addEventListener("drop", e => e.preventDefault());
+
+    clearBtn.addEventListener("click", clearAll);
+    selectAllBtn.addEventListener("click", () => {
+      processedFiles.forEach(item => item.selected = true);
+      renderAll();
+    });
+    selectNoneBtn.addEventListener("click", () => {
+      processedFiles.forEach(item => item.selected = false);
+      renderAll();
+    });
+    removeSelectedBtn.addEventListener("click", () => {
+      const before = processedFiles.length;
+      processedFiles = processedFiles.filter(item => !item.selected);
+      const removed = before - processedFiles.length;
+      renderAll();
+      setStatus(removed ? `${removed} shipment(s) removed.` : `No selected shipment to remove.`);
+    });
+
+    [toField, ccField, subjectPrefixField, bodyTemplateField, senderNameField, attachmentModeField].forEach(el => {
+      el.addEventListener("input", () => {
+        renderSummaryTable();
+        updateCountsAndButtons();
+        updateSubjectPreview();
+      });
+      el.addEventListener("change", () => {
+        renderSummaryTable();
+        updateCountsAndButtons();
+        updateSubjectPreview();
+      });
+    });
+
+    downloadSelectedBtn.addEventListener("click", async () => {
+      const selected = getSelectedShipments();
+      if (!selected.length) return;
+      setBusy(true, `Creating ${selected.length} Excel file(s)...`);
+      try {
+        for (const fileData of selected) {
+          const buffer = await buildWorkbookBuffer(fileData);
+          saveAs(new Blob([buffer]), buildExcelFileName(fileData));
+        }
+        setStatus(`${selected.length} Excel file(s) created.`);
+      } catch (err) {
+        console.error(err);
+        setStatus(`Could not create one or more Excel files.`);
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    emailSelectedBtn.addEventListener("click", async () => {
+      const selected = getSelectedShipments();
+      if (!selected.length) return;
+      setBusy(true, `Creating ${selected.length} email draft(s)...`);
+      try {
+        for (const fileData of selected) {
+          const emlBlob = await buildEmailBlob(fileData);
+          saveAs(emlBlob, buildEmailDraftFileName(fileData));
+        }
+        setStatus(`${selected.length} email draft(s) created.`);
+      } catch (err) {
+        console.error(err);
+        setStatus(`Could not create one or more email drafts.`);
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    zipBtn.addEventListener("click", async () => {
+      const selected = getSelectedShipments();
+      if (!selected.length) return;
+
+      setBusy(true, `Building ZIP for ${selected.length} shipment(s)...`);
+      try {
+        const zip = new JSZip();
+        const mode = attachmentModeField.value;
+
+        for (const fileData of selected) {
+          if (mode === "both" || mode === "excel") {
+            const workbookBuffer = await buildWorkbookBuffer(fileData);
+            zip.file(`excel/${buildExcelFileName(fileData)}`, workbookBuffer);
+          }
+
+          if (mode === "both" || mode === "email") {
+            const emlBlob = await buildEmailBlob(fileData);
+            const emlArrayBuffer = await emlBlob.arrayBuffer();
+            zip.file(`email-drafts/${buildEmailDraftFileName(fileData)}`, emlArrayBuffer);
+          }
+        }
+
+        zip.file("README.txt", buildReadmeText(selected.length, mode));
+
+        const content = await zip.generateAsync({ type: "blob" });
+        const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+        saveAs(content, `fumigation-batch-${stamp}.zip`);
+        setStatus(`ZIP created for ${selected.length} shipment(s).`);
+      } catch (err) {
+        console.error(err);
+        setStatus(`Could not build ZIP package.`);
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    async function handleFiles(fileList) {
+      const files = Array.from(fileList).filter(file => /\.html?$/i.test(file.name));
+      if (!files.length) {
+        setStatus("No valid HTML files selected.");
+        return;
+      }
+
+      const log = [];
+
+      for (const file of files) {
+        try {
+          const duplicate = processedFiles.some(item => item.originalFileName.toLowerCase() === file.name.toLowerCase());
+          if (duplicate) {
+            log.push(`${file.name}: already added`);
+            continue;
+          }
+
+          const htmlText = await file.text();
+          const parsed = parseInttraHtml(htmlText, file.name);
+          parsed.id = shipmentIdCounter++;
+          parsed.selected = true;
+          processedFiles.push(parsed);
+          log.push(`${file.name}: ${parsed.rows.length} container sheet(s) added`);
+        } catch (err) {
+          console.error(err);
+          log.push(`${file.name}: could not read this file`);
+        }
+      }
+
+      renderAll();
+      setStatus([`Total shipments loaded: ${processedFiles.length}`, ...log].join("\n"));
+      fileInput.value = "";
+    }
+
+    function clearAll() {
+      processedFiles = [];
+      renderAll();
+      setStatus("No file loaded.");
+      fileInput.value = "";
+    }
+
+    function renderAll() {
+      renderSummaryTable();
+      updateCountsAndButtons();
+      updateSubjectPreview();
+    }
+
+    function renderSummaryTable() {
+      tbody.innerHTML = "";
+
+      if (!processedFiles.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 8;
+        td.textContent = "No shipments loaded yet.";
+        td.className = "muted";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      for (const item of processedFiles) {
+        const tr = document.createElement("tr");
+
+        const checkboxTd = document.createElement("td");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = !!item.selected;
+        checkbox.addEventListener("change", () => {
+          item.selected = checkbox.checked;
+          updateCountsAndButtons();
+          updateSubjectPreview();
+          renderSummaryTable();
+        });
+        checkboxTd.appendChild(checkbox);
+        tr.appendChild(checkboxTd);
+
+        appendCell(tr, item.forwarderReference || "");
+        appendCell(tr, item.shipperNameOnly || "");
+        appendCell(tr, item.vessel || "");
+        appendCell(tr, item.voyage || "");
+        appendCell(tr, item.rows.map(r => r.containerNo).filter(Boolean).join(", "));
+        appendCell(tr, String(item.rows.length || 0));
+        appendCell(tr, buildEmailSubject(item));
+
+        tbody.appendChild(tr);
+      }
+    }
+
+    function appendCell(tr, value) {
+      const td = document.createElement("td");
+      td.textContent = value || "";
+      tr.appendChild(td);
+    }
+
+    function updateCountsAndButtons() {
+      const selected = getSelectedShipments();
+      const shipments = processedFiles.length;
+      const containers = processedFiles.reduce((sum, item) => sum + (item.rows?.length || 0), 0);
+
+      shipmentCountEl.textContent = String(shipments);
+      containerCountEl.textContent = String(containers);
+      selectedCountEl.textContent = String(selected.length);
+      emailCountEl.textContent = String(selected.length);
+
+      const hasAny = shipments > 0;
+      const hasSelected = selected.length > 0;
+
+      downloadSelectedBtn.disabled = !hasSelected;
+      emailSelectedBtn.disabled = !hasSelected;
+      zipBtn.disabled = !hasSelected;
+      selectAllBtn.disabled = !hasAny;
+      selectNoneBtn.disabled = !hasAny;
+      removeSelectedBtn.disabled = !hasSelected;
+    }
+
+    function updateSubjectPreview() {
+      const first = getSelectedShipments()[0];
+      subjectPreviewEl.textContent = first ? buildEmailSubject(first) : "No shipment selected yet.";
+    }
+
+    function getSelectedShipments() {
+      return processedFiles.filter(item => item.selected);
+    }
+
+    function setBusy(isBusy, message) {
+      [downloadSelectedBtn, emailSelectedBtn, zipBtn, clearBtn, selectAllBtn, selectNoneBtn, removeSelectedBtn].forEach(btn => btn.disabled = isBusy || (btn === clearBtn ? false : btn.disabled));
+      if (isBusy && message) setStatus(message);
+      if (!isBusy) updateCountsAndButtons();
+    }
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function parseInttraHtml(htmlText, originalFileName) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, "text/html");
+
+      const shipper = extractPartyBlock(doc, "SHIPPER");
+      const shipperNameOnly = extractFirstMeaningfulLine(shipper);
+      const consignee = extractPartyBlock(doc, "CONSIGNEE");
+      const carrierVesselVoyage = extractLabeledValue(doc, "CARRIER, VESSEL, VOYAGE");
+      const portOfDischarge = extractPortOfDischargeCityOnly(doc);
+      const forwarderReference = extractForwarderReference(doc) || stripExtension(originalFileName) || "Unknown Reference";
+
+      let vessel = "";
+      let voyage = "";
+
+      if (carrierVesselVoyage) {
+        const parts = carrierVesselVoyage.split(",").map(s => s.trim());
+        vessel = parts[1] || "";
+        voyage = parts[2] || "";
+      }
+
+      const particularsTable = findParticularsTable(doc);
+      if (!particularsTable) {
+        throw new Error("Could not find the PARTICULARS table.");
+      }
+
+      const rows = [];
+      const tableRows = Array.from(particularsTable.querySelectorAll("tr"));
+
+      for (const tr of tableRows) {
+        const tds = Array.from(tr.querySelectorAll("td"));
+        if (tds.length < 6) continue;
+
+        const firstCellText = getCellTextPreserveLines(tds[0]);
+        const containerMatch = firstCellText.match(/\b[A-Z]{4}\d{7}\b/);
+        if (!containerMatch) continue;
+
+        const containerNo = containerMatch[0];
+        const sealNo = extractSealFromCell(firstCellText);
+        const grossWeight = extractGrossWeightFromCell(tds[5]) || extractGrossWeightFromCell(tds[0]);
+        const cargoDescription = extractCargoDescriptionTwoLines(tds[4]);
+
+        rows.push({
+          consignee,
+          portOfDischarge,
+          vessel,
+          voyage,
+          containerNo,
+          sealNo,
+          grossWeight,
+          cargoDescription
+        });
+      }
+
+      return {
+        originalFileName,
+        forwarderReference,
+        shipper,
+        shipperNameOnly,
+        vessel,
+        voyage,
+        rows
+      };
+    }
+
+    function normalizeSpacesKeepLineBreaks(text) {
+      return text
+        .replace(/\u00A0/g, " ")
+        .replace(/\r/g, "")
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n[ \t]+/g, "\n")
+        .replace(/[ \t]{3,}/g, "  ")
+        .trim();
+    }
+
+    function textFromNodesPreserveBreaks(node) {
+      let out = "";
+
+      function walk(n) {
+        if (n.nodeType === Node.TEXT_NODE) {
+          out += n.nodeValue || "";
+          return;
+        }
+
+        if (n.nodeType !== Node.ELEMENT_NODE) return;
+
+        const tag = n.tagName.toLowerCase();
+        if (tag === "br") {
+          out += "\n";
+          return;
+        }
+
+        if (tag === "pre") {
+          out += n.textContent || "";
+          if (!out.endsWith("\n")) out += "\n";
+          return;
+        }
+
+        for (const child of n.childNodes) walk(child);
+        if (["tr", "p", "div"].includes(tag) && !out.endsWith("\n")) out += "\n";
+      }
+
+      walk(node);
+      return out.replace(/\r/g, "");
+    }
+
+    function getCellTextPreserveLines(cell) {
+      return normalizeSpacesKeepLineBreaks(textFromNodesPreserveBreaks(cell));
+    }
+
+    function stopAtCountry(lines) {
+      const out = [];
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+        if (/^No Contact information provided$/i.test(line)) break;
+        if (/^(Street|City|State\/Province|Postal Code|Country|PO BOX):/i.test(line)) break;
+        out.push(line);
+        if (/SOUTH AFRICA$|INDIA$|MALAYSIA$|UAE$|UNITED ARAB EMIRATES$|USA$|UNITED STATES|CHINA$/i.test(line)) break;
+      }
+      return out.join("\n").trim();
+    }
+
+    function extractFirstMeaningfulLine(text) {
+      if (!text) return "";
+      return String(text).split("\n").map(x => x.trim()).find(Boolean) || "";
+    }
+
+    function extractPartyBlock(doc, heading) {
+      const tdList = Array.from(doc.querySelectorAll("td"));
+      for (const td of tdList) {
+        const b = td.querySelector("b");
+        if (!b) continue;
+        const label = normalizeSpacesKeepLineBreaks(b.textContent || "");
+        if (label !== heading) continue;
+        let fullText = getCellTextPreserveLines(td);
+        fullText = fullText.replace(new RegExp("^" + heading + "\\s*"), "");
+        return stopAtCountry(fullText.split("\n"));
+      }
+      return "";
+    }
+
+    function extractLabeledValue(doc, label) {
+      const tdList = Array.from(doc.querySelectorAll("td"));
+      for (const td of tdList) {
+        const b = td.querySelector("b");
+        if (!b) continue;
+        const heading = normalizeSpacesKeepLineBreaks(b.textContent || "");
+        if (heading !== label) continue;
+        let text = getCellTextPreserveLines(td).replace(label, "").trim();
+        return text.split("\n").map(x => x.trim()).find(Boolean) || "";
+      }
+      return "";
+    }
+
+    function extractForwarderReference(doc) {
+      const text = doc.body.innerText.replace(/\u00A0/g, " ");
+      const m = text.match(/Forwarder Reference:\s*([^\n\r]+)/i);
+      return m ? m[1].trim() : "";
+    }
+
+    function extractPortOfDischargeCityOnly(doc) {
+      const tdList = Array.from(doc.querySelectorAll("td"));
+      for (const td of tdList) {
+        const b = td.querySelector("b");
+        if (!b) continue;
+        const label = normalizeSpacesKeepLineBreaks(b.textContent || "");
+        if (label !== "PORT OF DISCHARGE") continue;
+
+        const nestedTable = td.querySelector("table");
+        if (nestedTable) {
+          const rows = Array.from(nestedTable.querySelectorAll("tr"));
+          for (const row of rows) {
+            const cells = Array.from(row.querySelectorAll("td"));
+            if (cells.length >= 2) {
+              const key = normalizeSpacesKeepLineBreaks(cells[0].textContent || "").replace(/:$/, "").toUpperCase();
+              const value = normalizeSpacesKeepLineBreaks(cells[1].textContent || "");
+              if (key === "CITY") return value;
+            }
+          }
+        }
+
+        let text = getCellTextPreserveLines(td).replace("PORT OF DISCHARGE", "").trim();
+        const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
+        return lines[0] || "";
+      }
+      return "";
+    }
+
+    function findParticularsTable(doc) {
+      const tables = Array.from(doc.querySelectorAll("table"));
+      return tables.find(table => {
+        const text = normalizeSpacesKeepLineBreaks(table.textContent || "");
+        return text.includes("PARTICULARS") && text.includes("CONTAINER") && text.includes("DESCRIPTION");
+      }) || null;
+    }
+
+    function extractSealFromCell(text) {
+      const m = text.match(/Seal:\s*([A-Z0-9\-]+)/i);
+      return m ? m[1].trim() : "";
+    }
+
+    function extractGrossWeightFromCell(cell) {
+      const text = getCellTextPreserveLines(cell);
+      const m = text.match(/(\d+(?:\.\d+)?)\s*Kilograms/i);
+      if (!m) return "";
+      return `${Math.round(Number(m[1]))} KGS`;
+    }
+
+    function extractCargoDescriptionTwoLines(cell) {
+      const raw = cell.querySelector("pre")
+        ? cell.querySelector("pre").textContent.replace(/\r/g, "")
+        : getCellTextPreserveLines(cell);
+
+      const lines = raw
+        .split("\n")
+        .map(line => line.replace(/\u00A0/g, " "))
+        .map(line => line.replace(/[ \t]+$/g, ""))
+        .filter(line => line.trim() !== "");
+
+      let line1 = "";
+      let line2 = "";
+
+      for (const line of lines) {
+        if (!line1 && /HI-CUBE REEFER S\.T\.C\./i.test(line)) {
+          line1 = preserveInternalSpacing(line);
+          continue;
+        }
+        if (!line2 && /HS CODE\s*:/i.test(line)) {
+          line2 = preserveInternalSpacing(line);
+        }
+      }
+
+      return [line1, line2].filter(Boolean).join("\n");
+    }
+
+    function preserveInternalSpacing(line) {
+      return line.replace(/\u00A0/g, " ").replace(/\t/g, " ").replace(/[ ]{3,}/g, "  ").trimEnd();
+    }
+
+    function buildExcelFileName(fileData) {
+      const safeReference = sanitizeFileName(fileData.forwarderReference || "Unknown Reference");
+      return `Fumigation Application - ${safeReference}.xlsx`;
+    }
+
+    function buildEmailDraftFileName(fileData) {
+      return sanitizeFileName(buildEmailSubject(fileData)) + ".eml";
+    }
+
+    async function buildWorkbookBuffer(fileData) {
+      const workbook = new ExcelJS.Workbook();
+      fileData.rows.forEach((row, index) => createContainerDetailSheet(workbook, row, index + 1));
+      return await workbook.xlsx.writeBuffer();
+    }
+
+    async function buildEmailBlob(fileData) {
+      const excelFileName = buildExcelFileName(fileData);
+      const workbookBuffer = await buildWorkbookBuffer(fileData);
+      const subject = buildEmailSubject(fileData);
+      const body = buildEmailBody(fileData);
+      const emlContent = buildEmlWithAttachment({
+        to: (toField.value || "").trim(),
+        cc: (ccField.value || "").trim(),
+        subject,
+        body,
+        attachmentFileName: excelFileName,
+        attachmentMimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        attachmentBytes: workbookBuffer
+      });
+      return new Blob([emlContent], { type: "message/rfc822;charset=utf-8" });
+    }
+
+    function buildEmailSubject(fileData) {
+      const shipperName = (fileData.shipperNameOnly || "Unknown Shipper").trim();
+      const vesselVoyage = [fileData.vessel, fileData.voyage].filter(Boolean).join(" ").trim() || "Unknown Vessel Voyage";
+      const containerDetails = (fileData.rows || []).map(row => (row.containerNo || "").trim()).filter(Boolean).join(", ");
+      const forwardersReference = (fileData.forwarderReference || "Unknown Reference").trim();
+      const prefix = (subjectPrefixField.value || "Fumigation application").trim() || "Fumigation application";
+
+      return [prefix, shipperName, vesselVoyage, containerDetails || "No container details", forwardersReference].join(" - ");
+    }
+
+    function buildEmailBody(fileData) {
+      const template = bodyTemplateField.value || "";
+      const senderName = (senderNameField.value || "").trim();
+      const containers = (fileData.rows || []).map(row => row.containerNo).filter(Boolean);
+
+      const replacements = {
+        shipper: (fileData.shipperNameOnly || "").trim(),
+        vessel: (fileData.vessel || "").trim(),
+        voyage: (fileData.voyage || "").trim(),
+        forwarderReference: (fileData.forwarderReference || "").trim(),
+        containers: containers.join(", "),
+        containerList: containers.map(container => `- ${container}`).join("\n"),
+        containerCount: String(containers.length),
+        senderName
+      };
+
+      return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, token) => replacements[token] ?? "");
+    }
+
+    function buildReadmeText(count, mode) {
+      return [
+        "Fumigation batch package",
+        "",
+        `Shipments included: ${count}`,
+        `Package mode: ${mode}`,
+        "",
+        "Folders:",
+        mode !== "email" ? "- excel/ : generated Excel files" : null,
+        mode !== "excel" ? "- email-drafts/ : .eml draft files with Excel attached" : null,
+        "",
+        "Open the .eml files in Outlook or another mail client to review and send."
+      ].filter(Boolean).join("\n");
+    }
+
+    function buildEmlWithAttachment({ to, cc, subject, body, attachmentFileName, attachmentMimeType, attachmentBytes }) {
+      const boundary = "----=_NextPart_" + Math.random().toString(36).slice(2);
+      const base64Attachment = arrayBufferToBase64(attachmentBytes).replace(/(.{76})/g, "$1\n");
+      const safeSubject = encodeMimeHeader(subject);
+      const safeAttachmentName = attachmentFileName.replace(/[\r\n]/g, " ");
+
+      const headers = [
+        "MIME-Version: 1.0",
+        to ? `To: ${to}` : null,
+        cc ? `Cc: ${cc}` : null,
+        `Subject: ${safeSubject}`,
+        "X-Unsent: 1",
+        `Content-Type: multipart/mixed; boundary=\"${boundary}\"`
+      ].filter(Boolean);
+
+      return [
+        ...headers,
+        "",
+        `--${boundary}`,
+        "Content-Type: text/plain; charset=utf-8",
+        "Content-Transfer-Encoding: 8bit",
+        "",
+        body.replace(/\r/g, ""),
+        "",
+        `--${boundary}`,
+        `Content-Type: ${attachmentMimeType}; name=\"${safeAttachmentName}\"`,
+        "Content-Transfer-Encoding: base64",
+        `Content-Disposition: attachment; filename=\"${safeAttachmentName}\"`,
+        "",
+        base64Attachment,
+        `--${boundary}--`,
+        ""
+      ].join("\n");
+    }
+
+    function encodeMimeHeader(text) {
+      const utf8Bytes = new TextEncoder().encode(text);
+      return "=?UTF-8?B?" + arrayBufferToBase64(utf8Bytes) + "?=";
+    }
+
+    function arrayBufferToBase64(bufferLike) {
+      const bytes = bufferLike instanceof Uint8Array ? bufferLike : new Uint8Array(bufferLike);
+      let binary = "";
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      return btoa(binary);
+    }
+
+    function createContainerDetailSheet(workbook, row, number) {
+      const sheetName = makeSafeSheetName(row.containerNo || `CONTAINER_${number}`, workbook);
+      const ws = workbook.addWorksheet(sheetName);
+
+      ws.columns = [{ width: 22 }, { width: 50 }];
+
+      ws.mergeCells("A1:B1");
+      const titleCell = ws.getCell("A1");
+      titleCell.value = "CONTAINER DETAIL";
+      titleCell.font = { bold: true, size: 14, name: "Arial" };
+      titleCell.alignment = { horizontal: "center", vertical: "middle" };
+      titleCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "D9D9D9" } };
+      titleCell.border = fullBorder();
+
+      const detailRows = [
+        ["CONSIGNEE", row.consignee],
+        ["PORT OF DISCHARGE", row.portOfDischarge],
+        ["VESSEL", row.vessel],
+        ["VOYAGE", row.voyage],
+        ["CONTAINER NO.", row.containerNo],
+        ["SEAL NO.", row.sealNo],
+        ["GROSS WEIGHT", row.grossWeight],
+        ["CARGO DESCRIPTION", row.cargoDescription]
+      ];
+
+      detailRows.forEach((item, idx) => {
+        const excelRow = idx + 2;
+        const labelCell = ws.getCell(`A${excelRow}`);
+        const valueCell = ws.getCell(`B${excelRow}`);
+        labelCell.value = item[0];
+        valueCell.value = item[1] || "";
+        labelCell.font = { bold: true, size: 11, name: "Arial" };
+        valueCell.font = { size: 10, name: "Arial" };
+        labelCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "EDEDED" } };
+        labelCell.alignment = { vertical: "top", horizontal: "left", wrapText: true };
+        valueCell.alignment = { vertical: "top", horizontal: "left", wrapText: true };
+        labelCell.border = fullBorder();
+        valueCell.border = fullBorder();
+      });
+
+      ws.getRow(1).height = 24;
+      ws.getRow(2).height = calcRowHeight(row.consignee, 20, 2);
+      ws.getRow(3).height = 22;
+      ws.getRow(4).height = 22;
+      ws.getRow(5).height = 22;
+      ws.getRow(6).height = 22;
+      ws.getRow(7).height = 22;
+      ws.getRow(8).height = 22;
+      ws.getRow(9).height = calcRowHeight(row.cargoDescription, 20, 1.5);
+
+      ws.pageSetup = {
+        paperSize: 9,
+        orientation: "portrait",
+        fitToPage: true,
+        fitToWidth: 1,
+        fitToHeight: 1,
+        margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 }
+      };
+    }
+
+    function calcRowHeight(text, lineHeight = 20, extraLines = 1) {
+      if (!text) return lineHeight + 2;
+      const lines = String(text).split("\n").length;
+      return Math.max(lineHeight + 2, (lines + extraLines) * lineHeight);
+    }
+
+    function fullBorder() {
+      return {
+        top: { style: "thin", color: { argb: "000000" } },
+        left: { style: "thin", color: { argb: "000000" } },
+        bottom: { style: "thin", color: { argb: "000000" } },
+        right: { style: "thin", color: { argb: "000000" } }
+      };
+    }
+
+    function sanitizeFileName(name) {
+      return String(name).replace(/[\\/:*?"<>|]/g, " ").replace(/\s+/g, " ").trim();
+    }
+
+    function stripExtension(name) {
+      return String(name).replace(/\.[^/.]+$/, "");
+    }
+
+    function makeSafeSheetName(name, workbook) {
+      let safeName = String(name || "CONTAINER").replace(/[:\\\/\?\*\[\]]/g, "").trim();
+      if (!safeName) safeName = "CONTAINER";
+      safeName = safeName.substring(0, 31);
+      let finalName = safeName;
+      let counter = 1;
+      while (workbook.getWorksheet(finalName)) {
+        const suffix = "_" + counter;
+        finalName = safeName.substring(0, 31 - suffix.length) + suffix;
+        counter++;
+      }
+      return finalName;
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
